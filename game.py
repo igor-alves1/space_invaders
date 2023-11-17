@@ -3,9 +3,8 @@ from PPlay.window import *
 from PPlay.sprite import *
 
 
-
 def game(screen, difficulty):
-    screen.set_title('Igor Rodrigues Alves')
+    screen.set_title('Kill\'em all!')
     keyboard = screen.get_keyboard()
 
     player = Sprite("spaceship.png")
@@ -45,10 +44,17 @@ def game(screen, difficulty):
                 inimigos[i][j].move_x(inimigo_speed*tela_timer)
                 inimigos[i][j].draw()
 
-        if inimigos[0][-1].x >= screen.width-(inimigos[0][0].width/2) or inimigos[0][0].x <= inimigos[0][0].width/2:
+        if inimigos[0][-1].x >= screen.width-(inimigos[0][0].width/2):
             inimigo_speed *= -1
             for i in range(lin_inimigos):
                 for j in range(col_inimigos):
+                    inimigos[i][j].x += 5
+                    inimigos[i][j].y += 10
+        elif inimigos[0][0].x <= inimigos[0][0].width/2:
+            inimigo_speed *= -1
+            for i in range(lin_inimigos):
+                for j in range(col_inimigos):
+                    inimigos[i][j].x -= 5
                     inimigos[i][j].y += 10
 
         if inimigos[-1][0].y >= screen.height - 3*player.height:
