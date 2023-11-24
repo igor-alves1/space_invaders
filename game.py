@@ -1,15 +1,20 @@
 from PPlay.gameimage import *
 from PPlay.window import *
 from PPlay.sprite import *
+from PPlay.animation import *
+import random
 
 
 def game(screen, difficulty):
     screen.set_title('Kill\'em all!')
     keyboard = screen.get_keyboard()
 
-    player = Sprite("spaceship.png")
+    player = Animation("nave_spritesheet.png", 2)
     player.set_position((screen.width-player.width)/2, 19/20*(screen.height-player.height))
     player_speed = 150
+    player_lives = 3
+    invincible_tick = 2
+    invincible_timer = 2
 
     bullet_speed = 300
     bullets_list = []
@@ -20,27 +25,37 @@ def game(screen, difficulty):
     lin_inimigos = 4
     inimigos = [[], [], [], []]
     inimigo_speed = 100
-
-    score = 0
-    victory = False
-    
     for i in range(lin_inimigos):
         for j in range(col_inimigos):
             new_sprite = Sprite("invader.png")
             new_sprite.set_position(new_sprite.width+j*(3*new_sprite.width/2), new_sprite.height+i*(3*new_sprite.height/2))
             inimigos[i].append(new_sprite)
+    tiro_inimigo_tick = 3/difficulty
+    inimigo_timer = 0
+    randomx, randomy = 0, 0
+    enemy_bullets = []
+    
+    score = 0
+    victory = False
+    
 
     while True:
         tela_timer = screen.delta_time()
         bullet_timer += tela_timer
+        inimigo_timer += tela_timer
 
         #desenha o background, o player e o FPS
         screen.set_background_color((8,24,32))
         player.draw()
-        player.move_key_x(player_speed * tela_timer)
+        screen.draw_text(f"{player_lives}", x=player.x, y=player.y, color=[0,255,0])
         frame_rate = 1/tela_timer
         screen.draw_text(f"{frame_rate:.0f}", x=10, y=10, color=[0,255,0])
         screen.draw_text(text=str(score), x=(screen.width/2), y=10, color=[0,255,0])
+        
+        if keyboard.key_pressed("right"):
+        	player.x += player_speed*tela_timer
+        elif keyboard.key_pressed("left"):
+        	player.x -= player_speed*tela_timer
 
         if victory:
             screen.delay(3000)
@@ -50,6 +65,9 @@ def game(screen, difficulty):
         for item in bullets_list:
             item.draw()
             item.move_y((-bullet_speed)*tela_timer)
+        for item in enemy_bullets:
+        	item.draw()
+        	item.move_y(bullet_speed*tela_timer)
 
         #move os inimigos
         for i in range(len(inimigos)):
@@ -70,12 +88,21 @@ def game(screen, difficulty):
                     inimigos[i][j].x += 5
                     inimigos[i][j].y += 10
 
-        if inimigos[-1][0].y >= screen.height - 3*player.height:
+        if inimigos[-1][0].y >= screen.height - 3*player.height or player_lives==0:
             break
+        
+        #comportamento dos tiros dos inimigos
+        if inimigo_timer >= tiro_inimigo_tick:
+        	inimigo_timer = 0
+        	randomx = random.randint(0, len(inimigos)-1)
+        	randomy = random.randint(0, len(inimigos[randomx])-1)
+        	new_bullet = Sprite("bullet.png")
+        	new_bullet.set_position(inimigos[randomx][randomy].x, inimigos[randomx][randomy].y)
+        	enemy_bullets.append(new_bullet)
 
         #comportamento das balas
         if len(bullets_list):
-            if bullets_list[0].y > screen.height:
+            if bullets_list[0].y < 0:
                 bullets_list.pop(0)
                 
             for bullet in bullets_list:
@@ -89,7 +116,20 @@ def game(screen, difficulty):
                                         inimigos.remove(lin)
                                     bullets_list.remove(bullet)
                                     score += 100
-                    
+        if len(enemy_bullets):
+        	if enemy_bullets[0].y >= screen.height:
+        		enemy_bullets.pop(0)
+        	elif player.collided(enemy_bullets[0]) and invincible_timer >= invincible_tick:
+        		player_lives -= 1
+        		enemy_bullets.pop(0)
+        		player.set_curr_frame(1)
+        		invincible_timer = 0
+        
+        if invincible_timer < invincible_tick and player.get_curr_frame():
+        	invincible_timer += tela_timer
+        elif invincible_timer > invincible_tick and player.get_curr_frame():
+        	player.set_curr_frame(0)
+        	
 
         if keyboard.key_pressed("SPACE") and bullet_cooldown < bullet_timer:
             new_bullet = Sprite("bullet.png")
