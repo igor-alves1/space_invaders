@@ -22,7 +22,7 @@ def game(screen, difficulty):
     inimigo_speed = 100
 
     score = 0
-
+    victory = False
     
     for i in range(lin_inimigos):
         for j in range(col_inimigos):
@@ -41,6 +41,10 @@ def game(screen, difficulty):
         frame_rate = 1/tela_timer
         screen.draw_text(f"{frame_rate:.0f}", x=10, y=10, color=[0,255,0])
         screen.draw_text(text=str(score), x=(screen.width/2), y=10, color=[0,255,0])
+
+        if victory:
+            screen.delay(3000)
+            break
 
         #move e desenha a bala
         for item in bullets_list:
@@ -73,7 +77,7 @@ def game(screen, difficulty):
         if len(bullets_list):
             if bullets_list[0].y > screen.height:
                 bullets_list.pop(0)
-
+                
             for bullet in bullets_list:
                 if bullet.y <= (inimigos[-1][0].y + inimigos[-1][0].height):
                     for lin in inimigos:
@@ -94,10 +98,8 @@ def game(screen, difficulty):
             bullet_timer = 0
 
         if len(inimigos) == 0:
+            victory = True
             screen.draw_text("YOU WIN!!!", size=30, x=270, y=270, color=[0,255,0])
-            
-            screen.delay(3000)
-            break
 
         if keyboard.key_pressed('ESC'):
             break
