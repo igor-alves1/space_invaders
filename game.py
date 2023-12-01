@@ -3,6 +3,7 @@ from PPlay.window import *
 from PPlay.sprite import *
 from PPlay.animation import *
 import random
+from ranking import *
 
 
 def game(screen, difficulty):
@@ -16,7 +17,7 @@ def game(screen, difficulty):
     invincible_tick = 2
     invincible_timer = 2
 
-    bullet_speed = 300
+    bullet_speed = 400
     bullets_list = []
     bullet_cooldown = 1
     bullet_timer = 0
@@ -30,36 +31,39 @@ def game(screen, difficulty):
             new_sprite = Sprite("invader.png")
             new_sprite.set_position(new_sprite.width+j*(3*new_sprite.width/2), new_sprite.height+i*(3*new_sprite.height/2))
             inimigos[i].append(new_sprite)
-    tiro_inimigo_tick = 3/difficulty
+    tiro_inimigo_tick = 2.5/difficulty
     inimigo_timer = 0
     randomx, randomy = 0, 0
     enemy_bullets = []
     
     score = 0
-    victory = False
-    
+    fps_timer = 0
+    frame_rate = 0
+    fps = 0
 
     while True:
         tela_timer = screen.delta_time()
         bullet_timer += tela_timer
         inimigo_timer += tela_timer
+        fps += 1
+        fps_timer += tela_timer
+        if fps_timer >= 1:
+        	frame_rate = fps
+        	fps = 0
+        	fps_timer = 0
+        
 
         #desenha o background, o player e o FPS
         screen.set_background_color((8,24,32))
         player.draw()
         screen.draw_text(f"{player_lives}", x=player.x, y=player.y, color=[0,255,0])
-        frame_rate = 1/tela_timer
-        screen.draw_text(f"{frame_rate:.0f}", x=10, y=10, color=[0,255,0])
+        screen.draw_text(f"{frame_rate}", x=10, y=10, color=[0,255,0])
         screen.draw_text(text=str(score), x=(screen.width/2), y=10, color=[0,255,0])
         
         if keyboard.key_pressed("right"):
         	player.x += player_speed*tela_timer
         elif keyboard.key_pressed("left"):
         	player.x -= player_speed*tela_timer
-
-        if victory:
-            screen.delay(3000)
-            break
 
         #move e desenha a bala
         for item in bullets_list:
@@ -138,9 +142,20 @@ def game(screen, difficulty):
             bullet_timer = 0
 
         if len(inimigos) == 0:
-            victory = True
-            screen.draw_text("YOU WIN!!!", size=30, x=270, y=270, color=[0,255,0])
-
+        	screen.delay(250)
+        	difficulty += 0.5
+        	tiro_inimigo_tick = 2.5/difficulty
+        	inimigos = [[], [], [], []]
+        	for i in range(lin_inimigos):
+        		for j in range(col_inimigos):
+        			new_sprite = Sprite("invader.png")
+        			new_sprite.set_position(new_sprite.width+j*(3*new_sprite.width/2), new_sprite.height+i*(3*new_sprite.height/2))
+        			inimigos[i].append(new_sprite)
+        
+        if player_lives <= 0:
+        	ranking(screen, score)
+        	break
+        
         if keyboard.key_pressed('ESC'):
             break
 

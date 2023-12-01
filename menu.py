@@ -49,7 +49,7 @@ def menu(screen):
             diff_button.draw()
 
         if mouse.is_over_object(rank_button) and mouse.is_button_pressed(1):
-            pass
+            return 4
 
         if mouse.is_over_object(quit_button):
             quit_button.play()
